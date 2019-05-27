@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Product;
 use DB;
 use Excel;
-use App\Http\Resources\ProductCollection;
+use File;
+use App\Http\Resources\ProductListResource;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
@@ -13,7 +14,9 @@ class ProductController extends Controller
     
     public function index()
     {
-        return response()->json(Product::all());
+        ProductListResource::withoutWrapping();
+
+        return  ProductListResource::collection(Product::all());
     }
 
     
@@ -22,7 +25,6 @@ class ProductController extends Controller
         $this->validate($request, array(
             'file'      => 'required'
         ));
- 
         if($request->hasFile('file')){
             $extension = File::extension($request->file->getClientOriginalName());
             if ($extension == "xlsx" || $extension == "xls" || $extension == "csv") {
