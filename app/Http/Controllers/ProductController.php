@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Product;
+use App\Category;
+use App\SubCategory;
 use DB;
+use Session;
 use Excel;
 use File;
 use App\Http\Resources\ProductListResource;
@@ -18,8 +21,6 @@ class ProductController extends Controller
 
         return  ProductListResource::collection(Product::all());
     }
-
-    
  
     public function import(Request $request){
         $this->validate($request, array(
@@ -33,26 +34,28 @@ class ProductController extends Controller
                 $data = Excel::load($path, function($reader) {
                 })->get();
                 if(!empty($data) && $data->count()){
-                    
                     foreach ($data as $key => $value) {
 
-                        $category[] = [     
-                            'category' => $value->category,
+                        $category = [     
+                            'name' => $value->category,
                         ];
+                        $cat = Category::updateOrCreate($category);
 
+                        
+                        $subCategory = [
+                            'category_id' => $cat->id,
+                            'name' => $value->sub_category,
+                        ];
+                        
+                        $subcat = SubCategory::updateOrCreate($subCategory);
+                        
                         $product[] = [
+                            'category_id' => $cat->id,
+                            'sub_category_id' => $subcat->id,
                             'part_number' => $value->part_number,
                             'description' => $value->description,
                         ];
-
-                        $subCategory[] = [
-                            'sub_category' => $value->sub_category,
-                        ];
                     }
-                    
-                    $cateogry = App\Category::updateOrCreate($category);
-                    $subCateogry = App\SubCategory::updateOrCreate($subCategory);
-
 
                     if(!empty($product)){
                         
